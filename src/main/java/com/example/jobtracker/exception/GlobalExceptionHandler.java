@@ -17,6 +17,31 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleValidationErrors(MethodArgumentNotValidException ex,
+                                                                   WebRequest request) {
+
+        Map<String, String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (msg1, msg2) -> msg1 // if duplicate keys
+                ));
+
+        var response = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                "VALIDATION_ERROR",
+                "Validation failed",
+                request.getDescription(false).replace("uri=", ""),
+                LocalDateTime.now(),
+                errors
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponseDTO> handleBadRequest(
             BadRequestException ex,
@@ -70,30 +95,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationErrors(MethodArgumentNotValidException ex,
-                                                                   WebRequest request) {
-
-        Map<String, String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(
-                        FieldError::getField,
-                        FieldError::getDefaultMessage,
-                        (msg1, msg2) -> msg1 // if duplicate keys
-                ));
-
-        var response = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                "VALIDATION_ERROR",
-                "Validation failed",
-                request.getDescription(false).replace("uri=", ""),
-                LocalDateTime.now(),
-                errors
-        );
-
-        return ResponseEntity.badRequest().body(response);
-    }
 
     @ExceptionHandler(OptimisticLockException.class)
     public ResponseEntity<ErrorResponseDTO> handleOptimisticLock(
