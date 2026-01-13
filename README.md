@@ -13,3 +13,9 @@ Spring Boot backend application to track job applications.
 
 ## CI Status
 ![CI](https://github.com/pavan591-0/job-tracker-backend/actions/workflows/ci.yml/badge.svg)
+
+## Run Locally
+
+```bash
+mvn clean spring-boot:run
+
